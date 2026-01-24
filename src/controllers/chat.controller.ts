@@ -12,7 +12,7 @@ import { chatUserService } from '@/services/chatUser.service';
 class Controller {
     getListChat = controller({ query: GetListChatQueryDto }, async (req) => {
         const { cursor } = req.query;
-        const userId = req.user.id;
+        const userId = req.user.sub;
         const result = await chatUserService.getListChatForUser(userId, cursor);
 
         return { data: result, statusCode: 200 };
@@ -20,7 +20,7 @@ class Controller {
 
     createChat = controller({ body: CreateChatBodyDto }, async (req) => {
         const { name, description, memberIds } = req.body;
-        const userId = req.user.id;
+        const userId = req.user.sub;
         const chat = await chatService.createChat({
             createdBy: userId,
             name,

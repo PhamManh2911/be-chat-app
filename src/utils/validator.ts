@@ -1,23 +1,28 @@
 import { BadRequestError } from '@/errors/app';
 import { ClassConstructor, plainToInstance } from 'class-transformer';
 import { validate } from 'class-validator';
+import { NextFunction, Request, Response } from 'express';
 
-export async function validateDto<T extends object>(
-    dto: ClassConstructor<T>,
-    value: unknown,
-): Promise<T> {
-    const instance = plainToInstance(dto, value, {
-        enableImplicitConversion: true,
-    });
+export const validator =
+    (
+        source: 'body' | 'params' | 'query',
+        // eslint-disable-next-line
+        ClassDto: ClassConstructor<any>,
+    ) =>
+    async (req: Request, res: Response, next: NextFunction) => {
+        const errors = await validate(plainToInstance(ClassDto, req[source]), {
+            skipMissingProperties: false,
+            whitelist: true,
+            forbidNonWhitelisted: true,
+        });
+        const isArrayErrors = typeof errors === 'object' && Array.isArray(errors) && errors.length;
+        const isObjectErrors =
+            typeof errors === 'object' && !Array.isArray(errors) && Boolean(errors);
+        const isHaveError = isArrayErrors || isObjectErrors;
 
-    const errors = await validate(instance, {
-        whitelist: true,
-        forbidNonWhitelisted: true,
-    });
-
-    if (errors.length) {
-        throw new BadRequestError('Validation failed');
-    }
-
-    return instance;
-}
+        if (isHaveError) {
+            next(new BadRequestError({ data: errors }));
+        } else {
+            next();
+        }
+    };

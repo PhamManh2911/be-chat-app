@@ -6,6 +6,7 @@ export function errorMiddleware(err: Error, _req: Request, res: Response, _next:
     if (err instanceof AppError) {
         return res.status(err.statusCode).json({
             message: err.message,
+            data: err.data,
         });
     }
 

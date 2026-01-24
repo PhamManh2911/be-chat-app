@@ -8,11 +8,9 @@ import hpp from 'hpp';
 import { createServer } from 'http';
 import 'reflect-metadata';
 
-// @ts-expect-error (package missing TS types)
-import xssClean from 'xss-clean';
-
 import '@/cache'; // Initialize Redis connection
 import '@/database'; // Initialize MongoDB connection
+import { authMiddleware } from '@/middlewares/auth';
 import { errorMiddleware } from '@/middlewares/error';
 
 export const app = express();
@@ -27,9 +25,9 @@ app.use(cookieParser());
 
 app.use(cors({ origin: '*', credentials: true })); // CORS
 app.use(helmet()); // Security Headers
-app.use(xssClean()); // Prevent XSS Attacks
 app.use(hpp()); // Prevent Parameter Pollution
 
+app.use(authMiddleware);
 app.use('/chat', chatRouter);
 
 app.use(errorMiddleware);

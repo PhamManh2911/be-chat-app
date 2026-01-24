@@ -12,6 +12,12 @@ class Message extends TimeStamps {
     userId: string;
 
     @prop({ required: true })
+    userName: string;
+
+    @prop({})
+    userAvatarUrl?: string;
+
+    @prop({ required: true })
     content: string;
 }
 

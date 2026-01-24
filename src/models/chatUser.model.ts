@@ -14,6 +14,9 @@ class ChatUser {
     userId: string;
 
     @prop({ required: true })
+    userName: string;
+
+    @prop({ required: true })
     createdAt: Date;
 
     @prop({ required: true })

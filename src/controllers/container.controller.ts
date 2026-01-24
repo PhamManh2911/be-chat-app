@@ -1,55 +1,77 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-import { Request } from 'express';
-
-import { validateDto } from '@/utils/validator';
+/* eslint-disable */
+import { validator } from '@/utils/validator';
 import { ClassConstructor } from 'class-transformer';
-import { NextFunction, RequestHandler, Response } from 'express';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
 
-export type TypedRequest<
-    P extends object = {},
-    B extends object = {},
-    Q extends object = {},
-> = Request<P, any, B, Q>;
-
-type Dtos<P, B, Q> = {
-    params?: ClassConstructor<P>;
-    body?: ClassConstructor<B>;
-    query?: ClassConstructor<Q>;
+type ParamsValidator<ReqBody, ReqParams, ReqQueries> = {
+    body?: ReqBody;
+    params?: ReqParams;
+    query?: ReqQueries;
 };
 
-export function controller<
-    Res,
-    P extends object = {},
-    B extends object = {},
-    Q extends object = {},
+type Options = {
+    customResponse?: boolean;
+    middlewares?: RequestHandler<any, any, any, any>[];
+};
+
+const createValidationRequests = (
+    dtos: ParamsValidator<any, any, any>,
+): RequestHandler<any, any, any, any>[] => {
+    const requests: RequestHandler<any, any, any, any>[] = [];
+
+    if (dtos.params) {
+        requests.push(validator('params', dtos.params));
+    }
+    if (dtos.body) {
+        requests.push(validator('body', dtos.body));
+    }
+    if (dtos.query) {
+        requests.push(validator('query', dtos.query));
+    }
+    return requests;
+};
+
+export const controller = <
+    ResBody,
+    ReqBody extends ClassConstructor<any> & { prototype: {} },
+    ReqParams extends ClassConstructor<any> & { prototype: {} },
+    ReqQueries extends ClassConstructor<any> & { prototype: {} },
 >(
-    dtos: Dtos<P, B, Q>,
+    dtos: ParamsValidator<ReqBody, ReqParams, ReqQueries>,
     handler: (
-        req: TypedRequest<P, B, Q>,
+        req: Request<
+            ReqParams['prototype'],
+            ResBody,
+            ReqBody['prototype'],
+            ReqQueries['prototype']
+        >,
+
         res: Response,
+
         next: NextFunction,
-    ) => Promise<{ data: Res; statusCode: number }>,
-): RequestHandler {
-    return async (req, res, next) => {
+    ) => Promise<any>,
+    options?: Options,
+): RequestHandler<any, any, any, any>[] => {
+    const requests = createValidationRequests(dtos);
+
+    if (options?.middlewares && options.middlewares.length) {
+        options.middlewares.forEach((o) => requests.push(o));
+    }
+
+    requests.push(async (req, res, next) => {
         try {
-            if (dtos.params) {
-                req.params = (await validateDto(dtos.params, req.params)) as any;
+            const result = await handler(req, res, next);
+
+            if (options?.customResponse === true) {
+                return;
             }
+            const data = result?.data ?? result;
 
-            if (dtos.body) {
-                req.body = (await validateDto(dtos.body, req.body)) as B;
-            }
-
-            if (dtos.query) {
-                req.query = (await validateDto(dtos.query, req.query)) as any;
-            }
-
-            const result = await handler(req as TypedRequest<P, B, Q>, res, next);
-
-            res.status(result.statusCode).json(result.data);
-        } catch (err) {
-            next(err);
+            res.status(200).json(data);
+        } catch (error) {
+            next(error);
         }
-    };
-}
+    });
+
+    return requests;
+};

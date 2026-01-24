@@ -30,7 +30,7 @@ class Controller {
         async (req) => {
             const { chatId } = req.params;
             const { content } = req.body;
-            const userId = req.user.id;
+            const userId = req.user.sub;
 
             const message = await messageService.createMessage(chatId, userId, content);
 

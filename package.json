@@ -1,5 +1,5 @@
 {
-    "name": "chat-app-backend",
+    "name": "chat-service",
     "version": "1.0.0",
     "private": true,
     "scripts": {
@@ -26,12 +26,12 @@
         "helmet": "^8.1.0",
         "hpp": "^0.2.3",
         "ioredis": "^5.8.2",
+        "jsonwebtoken": "^9.0.3",
         "mongoose": "^9.0.1",
         "morgan": "^1.10.1",
         "reflect-metadata": "^0.2.2",
         "socket.io": "^4.8.1",
-        "winston": "^3.19.0",
-        "xss-clean": "^0.1.4"
+        "winston": "^3.19.0"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.3",
@@ -40,6 +40,7 @@
         "@types/express": "^4.17.0",
         "@types/hpp": "^0.2.7",
         "@types/jest": "^30.0.0",
+        "@types/jsonwebtoken": "^9.0.10",
         "@types/morgan": "^1.9.10",
         "@types/node": "^20.0.0",
         "@types/supertest": "^6.0.3",
@@ -57,9 +58,5 @@
         "tsconfig-paths": "^4.2.0",
         "typescript": "^5.9.3",
         "typescript-eslint": "^8.49.0"
-    },
-    "optionalDependencies": {
-        "bufferutil": "^4.0.9",
-        "utf-8-validate": "^6.0.5"
     }
 }

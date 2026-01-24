@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { TokenPayload } from '@/types/app';
 import 'express';
 
 declare module 'express-serve-static-core' {
@@ -15,9 +16,7 @@ declare global {
                 query?: any;
                 params?: any;
             };
-            user: {
-                id: string;
-            };
+            user: TokenPayload;
         }
     }
 }
