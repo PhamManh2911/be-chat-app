@@ -3,6 +3,7 @@ export type AppConfig = {
     appName: string;
     deployment: 'development' | 'production' | 'test';
     isDebugMode: boolean;
+    isTestMode: boolean;
 };
 
 const deployment = (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development';
@@ -12,4 +13,5 @@ export const appConfig: AppConfig = {
     appName: process.env.APP_NAME || 'Chat App',
     deployment,
     isDebugMode: deployment === 'development' || deployment === 'test',
+    isTestMode: deployment === 'test',
 };

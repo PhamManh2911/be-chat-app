@@ -9,3 +9,15 @@ export interface TokenPayload {
     name: string;
     avatar: string;
 }
+
+export type Status = 'active' | 'archived' | 'deleted';
+
+export const STATUS: Record<Uppercase<Status>, Status> = {
+    ACTIVE: 'active',
+    ARCHIVED: 'archived',
+    DELETED: 'deleted',
+};
+
+export type SocketData = {
+    user: TokenPayload;
+};

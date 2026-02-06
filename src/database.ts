@@ -15,7 +15,7 @@ class Database {
         return Database.instance;
     }
 
-    public async connect(uri: string) {
+    public async connect() {
         if (this.isConnected) {
             logger.info('[DB] Already connected');
             return mongoose.connection;
@@ -24,7 +24,20 @@ class Database {
         try {
             mongoose.set('strictQuery', true);
 
-            await mongoose.connect(uri);
+            if (!config.appConfig.isDebugMode) {
+                await mongoose.connect(config.databaseConfig.uri);
+            } else {
+                // with each jest worker use different database for parallel testing
+                await mongoose.connect(
+                    `${config.databaseConfig.uri}${process.env.JEST_WORKER_ID}`,
+                    {
+                        maxPoolSize: 1,
+                        minPoolSize: 0,
+                        serverSelectionTimeoutMS: 5000,
+                        authSource: 'admin',
+                    },
+                );
+            }
 
             if (config.appConfig.isDebugMode) {
                 mongoose.set('debug', true);
@@ -51,6 +64,6 @@ class Database {
 
 const database = Database.getInstance();
 
-database.connect(config.databaseConfig.uri || 'mongodb://localhost:27017/myapp');
+database.connect();
 
 export default database;

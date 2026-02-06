@@ -1,4 +1,6 @@
-import { ChatUserFilter, ChatUserModel, ChatUserUpdateQuery } from '@/models/chatUser.model';
+import { NotFoundError } from '@/errors/app';
+import { ChatUserFilter, ChatUserModel } from '@/models/chatUser.model';
+import { STATUS } from '@/types/app';
 
 class Service {
     private readonly pageSize = 20;
@@ -7,11 +9,11 @@ class Service {
         const filter: ChatUserFilter = { userId };
 
         if (cursor) {
-            filter.latestMessageAt = { $lt: cursor };
+            filter.updatedAt = { $lt: cursor };
         }
         const documents = await ChatUserModel.find(filter)
             .limit(this.pageSize)
-            .sort({ latestMessageAt: -1 })
+            .sort({ updatedAt: -1 })
             .lean();
 
         const hasMore =
@@ -19,7 +21,7 @@ class Service {
                 ? false
                 : await ChatUserModel.exists({
                       userId,
-                      latestMessageAt: { $lt: documents[documents.length - 1].latestMessageAt },
+                      updatedAt: { $lt: documents[documents.length - 1].updatedAt },
                   });
 
         return { data: documents, hasMore };
@@ -39,20 +41,14 @@ class Service {
     };
 
     createBulkChatUsers = async (chatId: string, memberIds: string[]) => {
-        const joinAt = new Date();
-        const chatUsers = memberIds.map((memberId) => ({
-            chatId,
-            userId: memberId,
-            latestMessageAt: joinAt,
-        }));
+        const chatUsers = await ChatUserModel.insertMany(
+            memberIds.map((memberId) => ({
+                chatId,
+                userId: memberId,
+            })),
+        );
 
-        await ChatUserModel.insertMany(chatUsers);
-    };
-
-    updateChatUsersForChat = async (chatId: string, payload: ChatUserUpdateQuery) => {
-        const results = await ChatUserModel.updateMany({ chatId }, payload);
-
-        return results;
+        return chatUsers;
     };
 
     deleteChatUsers = async (chatId: string, userIds?: string[]) => {
@@ -63,6 +59,25 @@ class Service {
         }
 
         await ChatUserModel.deleteMany(filter);
+    };
+
+    updateChatUserStatusForChat = async (chatId: string, status: string) => {
+        const result = await ChatUserModel.updateMany({ chatId }, { $set: { status } });
+
+        return result;
+    };
+
+    checkChatUserActive = async (chatId: string, userId: string) => {
+        const chatUser = await ChatUserModel.exists({
+            chatId,
+            userId,
+            status: STATUS.ACTIVE,
+        });
+
+        if (!chatUser) {
+            throw new NotFoundError({ message: 'Chat user not found or inactive' });
+        }
+        return chatUser;
     };
 }
 

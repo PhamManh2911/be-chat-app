@@ -1,9 +1,9 @@
 export type CorsConfig = {
-    origin: string;
+    origin: string[];
     // credentials: boolean;
 };
 
 export const corsConfig: CorsConfig = {
-    origin: process.env.BE_APP_CORS_ORIGIN || '*',
+    origin: process.env.BE_APP_CORS_ORIGIN?.split(',') || ['*'],
     // credentials: true,
 };

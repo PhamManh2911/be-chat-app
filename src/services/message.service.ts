@@ -11,7 +11,7 @@ class Service {
         }
         const documents = await MessageModel.find(filter)
             .limit(this.pageSize)
-            .sort({ latestMessageAt: -1 })
+            .sort({ createdAt: -1 })
             .lean();
 
         const hasMore =
@@ -31,8 +31,11 @@ class Service {
         return message;
     };
 
-    updateMessage = async (messageId: string, content: string) => {
-        const result = await MessageModel.updateOne({ _id: messageId }, { content });
+    updateMessage = async (userId: string, messageId: string, content: string) => {
+        const result = await MessageModel.updateOne(
+            { _id: messageId, userId },
+            { $set: { content, isEdited: true } },
+        );
 
         if (result.modifiedCount === 0) {
             throw new Error('Not found message');
@@ -40,8 +43,8 @@ class Service {
         return result;
     };
 
-    deleteMessage = async (messageId: string) => {
-        const result = await MessageModel.deleteOne({ _id: messageId });
+    deleteMessage = async (userId: string, messageId: string) => {
+        const result = await MessageModel.deleteOne({ _id: messageId, userId });
 
         if (result.deletedCount === 0) {
             throw new Error('Not found message');

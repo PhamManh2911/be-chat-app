@@ -1,11 +1,8 @@
-import { ChatDetailParamsDto } from '@/dto/base.dto';
-import { IsDate, IsOptional, IsString } from 'class-validator';
+import { ChatDetailParamsDto, CursorPaginationQueryDto } from '@/dto/base.dto';
+import { Status, STATUS } from '@/types/app';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-export class GetListChatQueryDto {
-    @IsOptional()
-    @IsDate()
-    cursor?: Date;
-}
+export class GetListChatQueryDto extends CursorPaginationQueryDto<Date> {}
 
 export class CreateChatBodyDto {
     @IsString()
@@ -15,8 +12,8 @@ export class CreateChatBodyDto {
     @IsString()
     description?: string;
 
-    @IsOptional()
-    memberIds?: string[];
+    @IsString({ each: true })
+    memberIds: string[];
 }
 
 export class UpdateChatParamsDto extends ChatDetailParamsDto {}
@@ -31,3 +28,10 @@ export class UpdateChatBodyDto {
 }
 
 export class DeleteChatParamsDto extends ChatDetailParamsDto {}
+
+export class UpdateChatStatusParamsDto extends ChatDetailParamsDto {}
+export class UpdateChatStatusBodyDto {
+    @IsString()
+    @IsEnum(STATUS)
+    status: Status;
+}

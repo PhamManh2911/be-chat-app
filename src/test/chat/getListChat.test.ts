@@ -1,30 +1,48 @@
-import { app } from '@/routers/app';
+import { createServer } from '@/routers/app';
+import SocketServerSingleton from '@/socket';
+import { Server } from 'http';
 import request from 'supertest';
 
-describe('GET /api/chats', () => {
-    it('should return chat list for user without cursor', async () => {
-        const mockResult = {
-            data: [{ chatId: 'chat-1' }, { chatId: 'chat-2' }],
-            nextCursor: 'cursor-2',
-        };
+describe('GET /chat', () => {
+    let server: Server;
 
-        const res = await request(app).get('/api/chats').set('Authorization', 'Bearer test-token');
+    beforeAll((done) => {
+        server = createServer();
+        server.listen(done);
+    });
+
+    afterAll(async () => {
+        await SocketServerSingleton.resetForTests();
+        await new Promise((resolve) => server.close(resolve));
+    });
+
+    it('should return chat list for user without cursor', async () => {
+        const res = await request(server).get('/chat').set('Authorization', 'Bearer test-token');
 
         expect(res.status).toBe(200);
-        expect(res.body).toEqual(mockResult);
+        expect(res.body).toHaveProperty('data');
+        expect(res.body).toHaveProperty('hasMore', false);
+        expect(res.body.data).toBeInstanceOf(Array);
+        expect(res.body.data).toHaveLength(1);
+        expect(res.body.data[0]).toHaveProperty('chatId', globalThis.__CHAT_ID);
     });
 
     it('should pass cursor to service when provided', async () => {
-        const mockResult = {
-            data: [],
-            nextCursor: null,
-        };
+        const res = await request(server).get('/chat').set('Authorization', 'Bearer test-token');
 
-        const res = await request(app)
-            .get('/api/chats')
-            .query({ cursor: 'cursor-1' })
+        expect(res.status).toBe(200);
+        expect(res.body).toHaveProperty('data');
+        expect(res.body.data).toBeInstanceOf(Array);
+        expect(res.body.data).toHaveLength(1);
+
+        const res2 = await request(server)
+            .get('/chat')
+            .query({ cursor: res.body.data[0].updatedAt })
             .set('Authorization', 'Bearer test-token');
 
-        expect(res.body).toEqual(mockResult);
+        expect(res2.status).toBe(200);
+        expect(res2.body).toHaveProperty('data');
+        expect(res2.body.data).toBeInstanceOf(Array);
+        expect(res2.body.data).toHaveLength(0);
     });
 });

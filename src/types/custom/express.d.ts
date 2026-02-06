@@ -11,11 +11,6 @@ declare module 'express-serve-static-core' {
 declare global {
     namespace Express {
         interface Request {
-            validated: {
-                body?: any;
-                query?: any;
-                params?: any;
-            };
             user: TokenPayload;
         }
     }

@@ -8,7 +8,8 @@ const chatRouter = Router();
 chatRouter.get('', chatController.getListChat); // get list of chats for user
 chatRouter.post('', chatController.createChat); // create new chat
 chatRouter.put('/:chatId', chatController.updateChat); // update chat details
-chatRouter.delete('/:chatId', chatController.deleteChat); // remove chat
+// chatRouter.delete('/:chatId', chatController.deleteChat); // remove chat
+chatRouter.put('/:chatId/status', chatController.updateChatStatus); // update chat status
 
 const chatUserRouter = Router({ mergeParams: true });
 

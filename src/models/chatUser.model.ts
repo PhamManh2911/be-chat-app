@@ -1,39 +1,34 @@
-import { getModelForClass, index, prop } from '@typegoose/typegoose';
-import { QueryFilter, UpdateQuery } from 'mongoose';
+import { Status, STATUS, TimeStamps } from '@/types/app';
+import { getModelForClass, index, ModelOptions, prop } from '@typegoose/typegoose';
+import { DefaultIdVirtual, HydratedDocument, QueryFilter, UpdateQuery } from 'mongoose';
 
-@index({ userId: 1, latestMessageAt: -1 })
+@index({ userId: 1, updatedAt: -1 })
 @index({ chatId: 1, userId: 1 }, { unique: true })
-class ChatUser {
+@ModelOptions({ schemaOptions: { timestamps: true } })
+class ChatUser extends TimeStamps {
     @prop({ required: true })
     chatId: string;
 
     @prop({ required: true })
-    chatName: string;
-
-    @prop({ required: true })
     userId: string;
-
-    @prop({ required: true })
-    userName: string;
-
-    @prop({ required: true })
-    createdAt: Date;
-
-    @prop({ required: true })
-    latestSender: string;
-
-    @prop({ required: true })
-    latestMessage: string;
-
-    @prop({ required: true })
-    latestMessageAt: Date;
 
     @prop({ default: false, required: true })
     muted: boolean;
+
+    @prop({
+        default: STATUS.ACTIVE,
+        required: true,
+        enum: Object.values(STATUS),
+        type: String,
+        select: false,
+    })
+    status: Status;
 }
 
 export type ChatUserFilter = QueryFilter<ChatUser>;
 
 export type ChatUserUpdateQuery = UpdateQuery<ChatUser>;
+
+export type ChatUserDocument = HydratedDocument<ChatUser> & DefaultIdVirtual;
 
 export const ChatUserModel = getModelForClass(ChatUser);

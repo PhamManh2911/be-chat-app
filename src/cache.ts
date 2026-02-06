@@ -13,9 +13,7 @@ class RedisSingleton {
                 maxRetriesPerRequest: null,
                 enableReadyCheck: true,
                 lazyConnect: false,
-                retryStrategy(times) {
-                    return Math.min(times * 50, 2000);
-                },
+                retryStrategy: (times) => Math.min(times * 50, 2000),
             });
 
             RedisSingleton.instance.on('connect', () => {
@@ -28,6 +26,12 @@ class RedisSingleton {
 
             RedisSingleton.instance.on('error', (err) => {
                 logger.error('❌ Redis error:', err);
+            });
+            RedisSingleton.instance.on('close', () => {
+                logger.warn('⚠️ Redis connection closed');
+            });
+            RedisSingleton.instance.on('reconnecting', () => {
+                logger.info('🔄 Redis reconnecting...');
             });
         }
 
