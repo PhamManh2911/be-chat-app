@@ -2,7 +2,7 @@ import { ChatDetailParamsDto, CursorPaginationQueryDto } from '@/dto/base.dto';
 import { Status, STATUS } from '@/types/app';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
-export class GetListChatQueryDto extends CursorPaginationQueryDto<Date> {}
+export class GetListChatQueryDto extends CursorPaginationQueryDto<string> {}
 
 export class CreateChatBodyDto {
     @IsString()

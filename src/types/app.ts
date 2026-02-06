@@ -21,3 +21,13 @@ export const STATUS: Record<Uppercase<Status>, Status> = {
 export type SocketData = {
     user: TokenPayload;
 };
+
+export type CursorQueryList = {
+    limit: number;
+    cursor?: string;
+};
+
+export type OffsetQueryList = {
+    page: number;
+    pageSize: number;
+};

@@ -11,8 +11,8 @@ const config: Config = {
         '^@/routers/(.*)$': '<rootDir>/src/routers/$1',
     },
     setupFilesAfterEnv: [
-        '<rootDir>/src/test/setup/seed.ts',
-        '<rootDir>/src/test/setup/middleware.ts',
+        '<rootDir>/src/test/setup/database.setup.ts',
+        '<rootDir>/src/test/setup/middleware.setup.ts',
     ],
     clearMocks: true,
 };

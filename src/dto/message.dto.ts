@@ -2,7 +2,7 @@ import { ChatDetailParamsDto, CursorPaginationQueryDto } from '@/dto/base.dto';
 import { IsDefined, IsString } from 'class-validator';
 
 export class GetMessageInChatParamsDto extends ChatDetailParamsDto {}
-export class GetMessageInChatQueryDto extends CursorPaginationQueryDto<Date> {}
+export class GetMessageInChatQueryDto extends CursorPaginationQueryDto<string> {}
 
 export class SendMessageInChatParamsDto extends ChatDetailParamsDto {}
 export class SendMessageInChatBodyDto {

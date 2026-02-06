@@ -1,23 +1,21 @@
 import { NotFoundError } from '@/errors/app';
 import { ChatUserFilter, ChatUserModel } from '@/models/chatUser.model';
-import { STATUS } from '@/types/app';
+import { CursorQueryList, OffsetQueryList, STATUS } from '@/types/app';
 
 class Service {
-    private readonly pageSize = 20;
-
-    getListChatForUser = async (userId: string, cursor?: Date) => {
+    getListChatForUser = async (userId: string, queryList: CursorQueryList) => {
         const filter: ChatUserFilter = { userId };
 
-        if (cursor) {
-            filter.updatedAt = { $lt: cursor };
+        if (queryList.cursor) {
+            filter.updatedAt = { $lt: queryList.cursor };
         }
         const documents = await ChatUserModel.find(filter)
-            .limit(this.pageSize)
+            .limit(queryList.limit)
             .sort({ updatedAt: -1 })
             .lean();
 
         const hasMore =
-            documents.length < this.pageSize
+            documents.length < queryList.limit
                 ? false
                 : await ChatUserModel.exists({
                       userId,
@@ -27,7 +25,8 @@ class Service {
         return { data: documents, hasMore };
     };
 
-    getListUserForChat = async (chatId: string, page: number, pageSize: number) => {
+    getListUserForChat = async (chatId: string, queryList: OffsetQueryList) => {
+        const { page, pageSize } = queryList;
         const filter: ChatUserFilter = { chatId };
 
         const documents = await ChatUserModel.find(filter)

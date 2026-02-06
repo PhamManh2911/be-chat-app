@@ -37,7 +37,7 @@ class Controller {
             const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 20;
 
             await chatService.checkChatActive(chatId);
-            const data = await chatUserService.getListUserForChat(chatId, page, pageSize);
+            const data = await chatUserService.getListUserForChat(chatId, { page, pageSize });
 
             return { statusCode: 200, data };
         },

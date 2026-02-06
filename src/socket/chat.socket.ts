@@ -1,10 +1,12 @@
 import logger from '@/logger';
 import { chatService } from '@/services/chat.service';
-import { Socket, Server as SocketServer } from 'socket.io';
+import { chatUserService } from '@/services/chatUser.service';
+import { SocketData } from '@/types/app';
+import { DefaultEventsMap, Socket, Server as SocketServer } from 'socket.io';
 
 export class ChatSocket {
     io: SocketServer;
-    socket: Socket;
+    socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
     constructor(io: SocketServer, socket: Socket) {
         this.io = io;
@@ -13,14 +15,16 @@ export class ChatSocket {
         this.registerEventListeners();
     }
 
-    registerEventListeners() {
+    async registerEventListeners() {
         this.socket.conn.once('upgrade', () => {
             // called when the transport is upgraded (i.e. from HTTP long-polling to WebSocket)
             logger.debug('upgraded transport', this.socket.conn.transport.name); // prints "websocket"
         });
+
         this.socket.on('disconnect', (reason) => {
             // ...
             logger.debug(`Socket disconnected: ${reason}`);
+            this.socket.removeAllListeners();
         });
 
         this.socket.on('error', (err) => {
@@ -28,18 +32,13 @@ export class ChatSocket {
                 this.socket.disconnect();
             }
         });
+        // TODO: only get 9999 chat user, maybe change later
+        const listChat = await chatUserService.getListChatForUser(this.socket.data.user.sub, {
+            limit: 9999,
+        });
 
-        this.socket.on('chat:join', this.handleJoinRoom.bind(this));
-        this.socket.on('chat:leave', this.handleLeaveRoom.bind(this));
-    }
-
-    private async handleJoinRoom(payload: { chatId: string }) {
-        await this.socket.join(chatService.getSocketRoomForChat(payload.chatId));
-        this.socket.emit('chat:joined', { chatId: payload.chatId });
-    }
-
-    private async handleLeaveRoom(payload: { chatId: string }) {
-        await this.socket.leave(chatService.getSocketRoomForChat(payload.chatId));
-        this.socket.emit('chat:left', { chatId: payload.chatId });
+        await this.socket.join(
+            listChat.data.map((c) => chatService.getSocketRoomForChat(c.chatId.toString())),
+        );
     }
 }

@@ -17,26 +17,33 @@ class Controller {
     getListChat = controller({ query: GetListChatQueryDto }, async (req) => {
         const { cursor } = req.query;
         const userId = req.user.sub;
-        const result = await chatUserService.getListChatForUser(userId, cursor);
+        const result = await chatUserService.getListChatForUser(userId, { cursor, limit: 20 });
 
         return { data: result, statusCode: 200 };
     });
 
     createChat = controller({ body: CreateChatBodyDto }, async (req) => {
-        const { name, description, memberIds } = req.body;
+        const { name, description } = req.body;
         const userId = req.user.sub;
         const chat = await chatService.createChat({
             createdBy: userId,
             name,
             description,
         });
+        const memberIds = [userId, ...req.body.memberIds];
 
-        await chatUserService.createBulkChatUsers(chat._id.toString(), [userId, ...memberIds]);
+        await chatUserService.createBulkChatUsers(chat._id.toString(), memberIds);
 
-        // TODO: send notification to all the members as well
         SocketServerSingleton.getIO()
-            .to(userService.getSocketRoomForUser(userId))
+            .to(memberIds.map(userService.getSocketRoomForUser))
             .emit(CHAT_CREATED, chat);
+
+        // NOTE: move socketsJoin after directly sending to all users
+        // since socketsJoin doesn't guarantee all users join room chat due to broadcast to adapter
+        // comment out adapter in socket to see the effect
+        SocketServerSingleton.getIO()
+            .in(memberIds.map(userService.getSocketRoomForUser))
+            .socketsJoin(chatService.getSocketRoomForChat(chat._id.toString()));
 
         return { data: chat, statusCode: 201 };
     });

@@ -1,5 +1,6 @@
 import { createServer } from '@/routers/app';
 import SocketServerSingleton from '@/socket';
+import { CHAT_ID } from '@/test/setup/seed';
 import { Server } from 'http';
 import request from 'supertest';
 
@@ -24,7 +25,7 @@ describe('GET /chat', () => {
         expect(res.body).toHaveProperty('hasMore', false);
         expect(res.body.data).toBeInstanceOf(Array);
         expect(res.body.data).toHaveLength(1);
-        expect(res.body.data[0]).toHaveProperty('chatId', globalThis.__CHAT_ID);
+        expect(res.body.data[0]).toHaveProperty('chatId', CHAT_ID);
     });
 
     it('should pass cursor to service when provided', async () => {

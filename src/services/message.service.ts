@@ -1,21 +1,21 @@
 import { MessageFilter, MessageModel } from '@/models/message.model';
+import { CursorQueryList } from '@/types/app';
 
 class Service {
-    private readonly pageSize = 20;
-
-    getListMessages = async (chatId: string, cursor?: Date) => {
+    getListMessages = async (chatId: string, queryList: CursorQueryList) => {
+        const { cursor, limit } = queryList;
         const filter: MessageFilter = { chatId };
 
         if (cursor) {
             filter.createdAt = { $lt: cursor };
         }
         const documents = await MessageModel.find(filter)
-            .limit(this.pageSize)
+            .limit(limit)
             .sort({ createdAt: -1 })
             .lean();
 
         const hasMore =
-            documents.length < this.pageSize
+            documents.length < limit
                 ? false
                 : await MessageModel.exists({
                       chatId,

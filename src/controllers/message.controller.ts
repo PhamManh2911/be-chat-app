@@ -22,7 +22,7 @@ class Controller {
             const { cursor } = req.query;
 
             await chatUserService.checkChatUserActive(chatId, req.user.sub);
-            const data = await messageService.getListMessages(chatId, cursor);
+            const data = await messageService.getListMessages(chatId, { cursor, limit: 20 });
 
             return { statusCode: 200, data };
         },
