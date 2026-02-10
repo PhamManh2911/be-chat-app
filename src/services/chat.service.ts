@@ -1,4 +1,4 @@
-import { NotFoundError } from '@/errors/app';
+import { ForbiddenError, NotFoundError } from '@/errors/app';
 import { ChatModel, ChatPayload } from '@/models/chat.model';
 import { Status, STATUS } from '@/types/app';
 
@@ -15,7 +15,7 @@ class Service {
         const isExist = await ChatModel.exists({ _id: chatId, status: STATUS.ACTIVE });
 
         if (!isExist) {
-            throw new NotFoundError({ message: 'Chat not found or not active' });
+            throw new ForbiddenError({ message: 'Chat not found or not active' });
         }
         return isExist;
     };

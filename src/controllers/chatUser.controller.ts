@@ -9,8 +9,10 @@ import {
 } from '@/dto/chatUser.dto';
 import { chatService } from '@/services/chat.service';
 import { chatUserService } from '@/services/chatUser.service';
+import { userService } from '@/services/user.service';
 import SocketServerSingleton from '@/socket';
 
+// TODO: what is remove/add user permission
 class Controller {
     addUserToChat = controller(
         { params: AddUserToChatParamsDto, body: AddUserToChatBodyDto },
@@ -18,14 +20,18 @@ class Controller {
             const { chatId } = req.params;
             const { userId } = req.body;
 
-            await chatService.checkChatActive(chatId);
+            // everyone is active can add new chat member
+            await chatUserService.checkChatUserActive(chatId, req.user.sub);
             const chatUser = await chatUserService.createBulkChatUsers(chatId, [userId]);
 
             SocketServerSingleton.getIO()
-                .to(chatService.getSocketRoomForChat(chatId))
-                .emit(CHAT_USER_ADDED, chatUser);
+                .to(userService.getSocketRoomForUser(userId))
+                .emit(CHAT_USER_ADDED, chatUser[0]);
+            SocketServerSingleton.getIO()
+                .in(userService.getSocketRoomForUser(userId))
+                .socketsJoin(chatService.getSocketRoomForChat(chatId));
 
-            return { statusCode: 201, data: null };
+            return { statusCode: 201, data: chatUser[0] };
         },
     );
 
@@ -33,25 +39,29 @@ class Controller {
         { params: GetUsersInChatParamsDto, query: GetUsersInChatQueryDto },
         async (req) => {
             const { chatId } = req.params;
-            const page = req.query.page ? parseInt(req.query.page) : 1;
-            const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 20;
+            const page = req.query.page ? +req.query.page : 1;
+            const pageSize = req.query.pageSize ? +req.query.pageSize : 20;
 
-            await chatService.checkChatActive(chatId);
             const data = await chatUserService.getListUserForChat(chatId, { page, pageSize });
 
             return { statusCode: 200, data };
         },
     );
 
+    // TODO: what about leaving chat (send userId as yourself)
     removeUserFromChat = controller({ params: RemoveUserFromChatParamsDto }, async (req) => {
         const { chatId, userId } = req.params;
 
-        await chatService.checkChatActive(chatId);
+        // everyone is active can remove chat member
+        await chatUserService.checkChatUserActive(chatId, req.user.sub);
         await chatUserService.deleteChatUsers(chatId, [userId]);
 
         SocketServerSingleton.getIO()
-            .to(chatService.getSocketRoomForChat(chatId))
-            .emit(CHAT_USER_REMOVED, { userId });
+            .to(userService.getSocketRoomForUser(userId))
+            .emit(CHAT_USER_REMOVED, { userId, chatId });
+        SocketServerSingleton.getIO()
+            .in(userService.getSocketRoomForUser(userId))
+            .socketsLeave(chatService.getSocketRoomForChat(chatId));
 
         return { statusCode: 204, data: null };
     });

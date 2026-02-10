@@ -1,4 +1,4 @@
-import { MESSAGE_CREATED, MESSAGE_DELETED } from '@/constants/socketEvent';
+import { MESSAGE_CREATED, MESSAGE_DELETED, MESSAGE_UPDATED } from '@/constants/socketEvent';
 import { controller } from '@/controllers/container.controller';
 import {
     DeleteMessageFromChatParamsDto,
@@ -37,7 +37,13 @@ class Controller {
 
             await chatUserService.checkChatUserActive(chatId, userId);
 
-            const message = await messageService.createMessage(chatId, userId, content);
+            const message = await messageService.createMessage({
+                chatId,
+                userId,
+                content,
+                userName: req.user.name,
+                userAvatarUrl: req.user.avatar,
+            });
 
             // send notification to chat members
             SocketServerSingleton.getIO()
@@ -60,13 +66,13 @@ class Controller {
 
             SocketServerSingleton.getIO()
                 .to(chatService.getSocketRoomForChat(chatId))
-                .emit(MESSAGE_DELETED, message);
+                .emit(MESSAGE_UPDATED, message);
 
             return { statusCode: 200, data: message };
         },
     );
 
-    deleteMessageFromChat = controller({ params: DeleteMessageFromChatParamsDto }, async (req) => {
+    deleteMessageInChat = controller({ params: DeleteMessageFromChatParamsDto }, async (req) => {
         const { messageId, chatId } = req.params;
         const userId = req.user.sub;
 

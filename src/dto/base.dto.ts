@@ -1,4 +1,5 @@
-import { IsDefined, IsOptional, IsString } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsDefined, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class ChatDetailParamsDto {
     @IsDefined()
@@ -8,12 +9,17 @@ export class ChatDetailParamsDto {
 
 export class OffsetPaginationQueryDto {
     @IsOptional()
-    @IsString()
-    page?: string;
+    @Type(() => Number)
+    @IsNumber()
+    @Min(1)
+    page?: number;
 
     @IsOptional()
-    @IsString()
-    pageSize?: string;
+    @Type(() => Number)
+    @IsNumber()
+    @Max(50)
+    @Min(1)
+    pageSize?: number;
 }
 
 export class CursorPaginationQueryDto<T> {

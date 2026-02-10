@@ -22,7 +22,7 @@ const messageRouter = Router({ mergeParams: true });
 messageRouter.get('/', messageController.getMessagesInChat); // get messages in chat
 messageRouter.post('/', messageController.sendMessageInChat); // send message in chat
 messageRouter.put('/:messageId', messageController.editMessageInChat); // edit message in chat
-messageRouter.delete('/:messageId', messageController.deleteMessageFromChat); // delete message from chat
+messageRouter.delete('/:messageId', messageController.deleteMessageInChat); // delete message from chat
 
 chatRouter.use('/:chatId/user', chatUserRouter);
 chatRouter.use('/:chatId/message', messageRouter);

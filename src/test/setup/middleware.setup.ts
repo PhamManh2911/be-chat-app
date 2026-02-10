@@ -1,5 +1,5 @@
 import { UnauthorizedError } from '@/errors/app';
-import { USER1_ID, USER2_ID } from '@/test/setup/seed';
+import { USER1_ID, USER2_ID, USER3_ID } from '@/test/setup/seed';
 import { TokenPayload } from '@/types/app';
 import { NextFunction, Request, Response } from 'express';
 import { ExtendedError, Socket } from 'socket.io';
@@ -9,14 +9,20 @@ jest.mock('@/middlewares/auth', () => {
         'test-token': {
             sub: USER1_ID,
             email: 'user1@example.com',
-            name: 'user1',
+            name: 'User 1',
             avatar: 'user1@avatar',
         },
         'test-token2': {
             sub: USER2_ID,
             email: 'user2@example.com',
-            name: 'user2',
+            name: 'User 2',
             avatar: 'user2@avatar',
+        },
+        'test-token3': {
+            sub: USER3_ID,
+            email: 'user3@example.com',
+            name: 'User 3',
+            avatar: 'user3@avatar',
         },
     };
 

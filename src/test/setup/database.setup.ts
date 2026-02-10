@@ -3,7 +3,7 @@ import database from '@/database';
 import { ChatModel } from '@/models/chat.model';
 import { ChatUserModel } from '@/models/chatUser.model';
 import { MessageModel } from '@/models/message.model';
-import { CHAT_DATA, CHAT_USER_DATA, MESSAGE_DATA } from '@/test/setup/seed';
+import { CHAT_DATA, CHAT_USER_DATA, MESSAGE_USER1, MESSAGE_USER2 } from '@/test/setup/seed';
 import mongoose from 'mongoose';
 
 beforeAll(async () => {
@@ -16,7 +16,9 @@ beforeAll(async () => {
     await ChatUserModel.insertMany(CHAT_USER_DATA);
 
     // Messages
-    await MessageModel.insertMany(MESSAGE_DATA);
+    await MessageModel.insertOne(MESSAGE_USER1);
+    await new Promise((res) => setTimeout(res, 100));
+    await MessageModel.insertOne(MESSAGE_USER2);
 });
 
 afterAll(async () => {

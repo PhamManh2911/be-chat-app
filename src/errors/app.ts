@@ -21,6 +21,11 @@ export class UnauthorizedError extends AppError {
         super(401, message || 'Unauthorized', data);
     }
 }
+export class ForbiddenError extends AppError {
+    constructor({ message, data }: { message?: string; data?: any } = {}) {
+        super(403, message || 'Forbidden', data);
+    }
+}
 
 export class NotFoundError extends AppError {
     constructor({ message, data }: { message?: string; data?: any } = {}) {

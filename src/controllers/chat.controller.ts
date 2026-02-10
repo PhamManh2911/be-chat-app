@@ -86,10 +86,7 @@ class Controller {
             await chatUserService.updateChatUserStatusForChat(chatId, status);
             SocketServerSingleton.getIO()
                 .to(chatService.getSocketRoomForChat(chatId))
-                .emit(CHAT_STATUS_UPDATED, {
-                    chatId,
-                    status,
-                });
+                .emit(CHAT_STATUS_UPDATED, { chatId, status });
 
             return { data: chat, statusCode: 200 };
         },

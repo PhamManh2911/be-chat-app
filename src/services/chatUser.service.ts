@@ -1,4 +1,4 @@
-import { NotFoundError } from '@/errors/app';
+import { ForbiddenError } from '@/errors/app';
 import { ChatUserFilter, ChatUserModel } from '@/models/chatUser.model';
 import { CursorQueryList, OffsetQueryList, STATUS } from '@/types/app';
 
@@ -74,7 +74,7 @@ class Service {
         });
 
         if (!chatUser) {
-            throw new NotFoundError({ message: 'Chat user not found or inactive' });
+            throw new ForbiddenError({ message: 'Chat user not found or inactive' });
         }
         return chatUser;
     };

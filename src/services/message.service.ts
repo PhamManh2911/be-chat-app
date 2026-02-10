@@ -1,4 +1,4 @@
-import { MessageFilter, MessageModel } from '@/models/message.model';
+import { MessageFilter, MessageModel, MessagePayload } from '@/models/message.model';
 import { CursorQueryList } from '@/types/app';
 
 class Service {
@@ -25,19 +25,20 @@ class Service {
         return { data: documents, hasMore };
     };
 
-    createMessage = async (chatId: string, userId: string, content: string) => {
-        const message = await MessageModel.create({ chatId, userId, content });
+    createMessage = async (payload: MessagePayload) => {
+        const message = await MessageModel.create(payload);
 
         return message;
     };
 
     updateMessage = async (userId: string, messageId: string, content: string) => {
-        const result = await MessageModel.updateOne(
+        const result = await MessageModel.findOneAndUpdate(
             { _id: messageId, userId },
             { $set: { content, isEdited: true } },
+            { new: true },
         );
 
-        if (result.modifiedCount === 0) {
+        if (!result) {
             throw new Error('Not found message');
         }
         return result;

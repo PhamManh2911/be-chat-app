@@ -1,6 +1,14 @@
 import { TimeStamps } from '@/types/app';
 import { getModelForClass, index, modelOptions, prop } from '@typegoose/typegoose';
-import { DefaultIdVirtual, HydratedDocument, QueryFilter, Types } from 'mongoose';
+import {
+    ApplyBasicCreateCasting,
+    DeepPartial,
+    DefaultIdVirtual,
+    HydratedDocument,
+    QueryFilter,
+    Require_id,
+    Types,
+} from 'mongoose';
 
 @index({ chatId: 1, createdAt: -1 })
 @modelOptions({ schemaOptions: { timestamps: true } })
@@ -27,6 +35,8 @@ class Message extends TimeStamps {
 }
 
 export type MessageFilter = QueryFilter<Message>;
+
+export type MessagePayload = DeepPartial<ApplyBasicCreateCasting<Require_id<Message>>>;
 
 export type MessageDocument = HydratedDocument<Message> & DefaultIdVirtual;
 
