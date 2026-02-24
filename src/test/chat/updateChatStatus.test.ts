@@ -12,6 +12,7 @@ import { Socket as ClientSocket, io as ioc } from 'socket.io-client';
 import request from 'supertest';
 
 describe('PUT /chat/:chatId/status', () => {
+    const REQUEST_URL = `/chat/${CHAT_ID}/status`;
     let server: Server, clientSocket: ClientSocket;
 
     beforeAll((done) => {
@@ -38,7 +39,7 @@ describe('PUT /chat/:chatId/status', () => {
     describe('error case', () => {
         it('should return error if status is not a string', async () => {
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}/status`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({ status: 1 });
 
@@ -52,7 +53,7 @@ describe('PUT /chat/:chatId/status', () => {
 
         it('should return error if status is invalid', async () => {
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}/status`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({ status: 'something' });
 
@@ -69,7 +70,7 @@ describe('PUT /chat/:chatId/status', () => {
         it('should update chat, chat user status and send notification if status is archived', async () => {
             const socketPromise = waitFor(clientSocket, CHAT_STATUS_UPDATED);
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}/status`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({ status: STATUS.ARCHIVED });
 
@@ -109,7 +110,7 @@ describe('PUT /chat/:chatId/status', () => {
         it('should update chat, chat user status in database and send notification if status is deleted', async () => {
             const socketPromise = waitFor(clientSocket, CHAT_STATUS_UPDATED);
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}/status`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({ status: STATUS.DELETED });
 

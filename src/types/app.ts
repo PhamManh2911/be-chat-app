@@ -31,3 +31,5 @@ export type OffsetQueryList = {
     page: number;
     pageSize: number;
 };
+
+export type IdempotencyProcessStatus = 'processing' | 'completed' | 'failed';

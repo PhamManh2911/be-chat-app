@@ -1,7 +1,10 @@
+import redis from '@/cache';
+import { IDEMPOTENT_PROCESS_COMPLETED } from '@/constants/idempotencyStatus';
 import { MESSAGE_CREATED } from '@/constants/socketEvent';
 import { ChatUserModel } from '@/models/chatUser.model';
 import { MessageModel } from '@/models/message.model';
 import { createServer } from '@/routers/app';
+import { cacheService } from '@/services/cache.service';
 import SocketServerSingleton from '@/socket';
 import { CHAT_ID, USER1_ID } from '@/test/setup/seed';
 import { waitFor } from '@/test/utils/socket';
@@ -10,8 +13,10 @@ import { Server } from 'http';
 import { AddressInfo } from 'net';
 import { Socket as ClientSocket, io as ioc } from 'socket.io-client';
 import request from 'supertest';
+import { v4 as uuidV4 } from 'uuid';
 
 describe('POST /chat/:chatId/message', () => {
+    const REQUEST_URL = `/chat/${CHAT_ID}/message`;
     let server: Server, clientSocket: ClientSocket;
 
     beforeAll((done) => {
@@ -38,9 +43,11 @@ describe('POST /chat/:chatId/message', () => {
 
     describe('error case', () => {
         it('should return error when no content was sent', async () => {
+            const idempotencyKey = uuidV4();
             const res = await request(server)
-                .post(`/chat/${CHAT_ID}/message`)
+                .post(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
                 .send({});
 
             expect(res.status).toBe(400);
@@ -52,9 +59,11 @@ describe('POST /chat/:chatId/message', () => {
         });
 
         it('should return error when send number', async () => {
+            const idempotencyKey = uuidV4();
             const res = await request(server)
-                .post(`/chat/${CHAT_ID}/message`)
+                .post(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
                 .send({ content: 5 });
 
             expect(res.status).toBe(400);
@@ -66,9 +75,11 @@ describe('POST /chat/:chatId/message', () => {
         });
 
         it('should return error when send empty string', async () => {
+            const idempotencyKey = uuidV4();
             const res = await request(server)
-                .post(`/chat/${CHAT_ID}/message`)
+                .post(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
                 .send({ content: '' });
 
             expect(res.status).toBe(400);
@@ -84,9 +95,11 @@ describe('POST /chat/:chatId/message', () => {
                 { chatId: CHAT_ID, userId: USER1_ID, status: STATUS.ACTIVE },
                 { $set: { status: STATUS.ARCHIVED } },
             );
+            const idempotencyKey = uuidV4();
             const res = await request(server)
-                .post(`/chat/${CHAT_ID}/message`)
+                .post(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
                 .send({ content: 'message' });
 
             expect(res.status).toBe(403);
@@ -97,16 +110,72 @@ describe('POST /chat/:chatId/message', () => {
                 { $set: { status: STATUS.ACTIVE } },
             );
         });
+
+        it('should return error when not provide idempotency key', async () => {
+            const res = await request(server)
+                .post(REQUEST_URL)
+                .set('Authorization', 'Bearer test-token')
+                .send({ content: 'hello' });
+
+            expect(res.status).toBe(400);
+            expect(res.body.message).toBe('Missing idempotency key');
+        });
+
+        it('should return error when using same idempotency key', async () => {
+            const idempotencyKey = uuidV4();
+            const reqPayload = { content: 'something' };
+            await request(server)
+                .post(REQUEST_URL)
+                .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
+                .send(reqPayload);
+            const res = await request(server)
+                .post(REQUEST_URL)
+                .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
+                .send(reqPayload);
+
+            expect(res.status).toBe(409);
+            expect(res.body.message).toBe(
+                'Idempotency key is currently being processed by another request',
+            );
+        });
+
+        it('should remove cached idempotency process in redis when fail on creating in database', async () => {
+            const idempotencyKey = uuidV4();
+            const reqPayload = {};
+            const res = await request(server)
+                .post(REQUEST_URL)
+                .set('Authorization', 'Bearer test-token')
+                .set('Idempotency-Key', idempotencyKey)
+                .send(reqPayload);
+
+            expect(res.statusCode).toBe(400);
+            const data = res.body.data;
+
+            expect(data).toHaveLength(1);
+            expect(data[0]).toHaveProperty('property', 'content');
+            expect(data[0].constraints).toHaveProperty('isDefined');
+
+            // Cache idempotency data checking
+            const idempotencyProcess = await redis.get(
+                cacheService.getIdempotentProcessFromNs('message', idempotencyKey),
+            );
+
+            expect(idempotencyProcess).toBeFalsy();
+        });
     });
 
     describe('success case', () => {
         it('should return success, save to database and send notification to other chat users', async () => {
             const socketPromise = waitFor(clientSocket, MESSAGE_CREATED);
-            const message = 'What is up, my doug';
+            const idempotencyKey = uuidV4();
+            const messageContent = 'What is up, my doug';
             const res = await request(server)
-                .post(`/chat/${CHAT_ID}/message`)
+                .post(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
-                .send({ content: message });
+                .set('Idempotency-Key', idempotencyKey)
+                .send({ content: messageContent });
 
             expect(res.status).toBe(201);
             const messageData = res.body;
@@ -115,14 +184,14 @@ describe('POST /chat/:chatId/message', () => {
             expect(messageData).toHaveProperty('userId', USER1_ID);
             expect(messageData).toHaveProperty('userName', 'User 1');
             expect(messageData).toHaveProperty('userAvatarUrl', 'user1@avatar');
-            expect(messageData).toHaveProperty('content', message);
+            expect(messageData).toHaveProperty('content', messageContent);
             expect(messageData).toHaveProperty('isEdited', false);
 
             // Checking database
             const messageDocument = await MessageModel.findById(messageData._id).lean();
 
             expect(messageDocument).toBeTruthy();
-            expect(messageDocument?.content).toBe(message);
+            expect(messageDocument?.content).toBe(messageContent);
             expect(messageDocument?.isEdited).toBe(false);
             expect(messageDocument?.userAvatarUrl).toBe('user1@avatar');
             expect(messageDocument?.userName).toBe('User 1');
@@ -134,8 +203,18 @@ describe('POST /chat/:chatId/message', () => {
             expect(socketData).toHaveProperty('userId', USER1_ID);
             expect(socketData).toHaveProperty('userName', 'User 1');
             expect(socketData).toHaveProperty('userAvatarUrl', 'user1@avatar');
-            expect(socketData).toHaveProperty('content', message);
+            expect(socketData).toHaveProperty('content', messageContent);
             expect(socketData).toHaveProperty('isEdited', false);
+
+            // Cache idempotency data checking
+            const idempotencyProcess = await redis.get(
+                cacheService.getIdempotentProcessFromNs('message', idempotencyKey),
+            );
+
+            expect(idempotencyProcess).toBeTruthy();
+            const { data, status } = JSON.parse(idempotencyProcess as string);
+            expect(status).toBe(IDEMPOTENT_PROCESS_COMPLETED);
+            expect(data).toEqual(messageData);
         });
     });
 });

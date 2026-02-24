@@ -10,6 +10,7 @@ import { Socket as ClientSocket, io as ioc } from 'socket.io-client';
 import request from 'supertest';
 
 describe('PUT /chat/:chatId', () => {
+    const REQUEST_URL = `/chat/${CHAT_ID}`;
     let server: Server, clientSocket: ClientSocket;
 
     beforeAll((done) => {
@@ -37,7 +38,7 @@ describe('PUT /chat/:chatId', () => {
     describe('error case', () => {
         it('should return error when chat name is invalid', async () => {
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({ name: 1 });
 
@@ -51,7 +52,7 @@ describe('PUT /chat/:chatId', () => {
         });
         it('should return error when chat description is invalid', async () => {
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({ description: 1 });
 
@@ -69,7 +70,7 @@ describe('PUT /chat/:chatId', () => {
         it('should update chat detail and online member should receive socket update', async () => {
             const socketPromise = waitFor(clientSocket, CHAT_UPDATED);
             const res = await request(server)
-                .put(`/chat/${CHAT_ID}`)
+                .put(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token')
                 .send({
                     name: 'New name',

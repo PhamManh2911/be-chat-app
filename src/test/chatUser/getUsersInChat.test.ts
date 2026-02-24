@@ -5,6 +5,7 @@ import { Server } from 'http';
 import request from 'supertest';
 
 describe('GET /chat/:chatId/user', () => {
+    const REQUEST_URL = `/chat/${CHAT_ID}/user`;
     let server: Server;
 
     beforeAll((done) => {
@@ -19,7 +20,7 @@ describe('GET /chat/:chatId/user', () => {
     describe('error case', () => {
         it('should return error when page and pageSize are not number compatible', async () => {
             const res = await request(server)
-                .get(`/chat/${CHAT_ID}/user`)
+                .get(REQUEST_URL)
                 .query({ page: 'page', pageSize: 'pageSize' })
                 .set('Authorization', 'Bearer test-token');
 
@@ -39,7 +40,7 @@ describe('GET /chat/:chatId/user', () => {
 
         it('should return error when page and pageSize are not positive numbers', async () => {
             const res = await request(server)
-                .get(`/chat/${CHAT_ID}/user`)
+                .get(REQUEST_URL)
                 .query({ page: 0, pageSize: 0 })
                 .set('Authorization', 'Bearer test-token');
 
@@ -56,7 +57,7 @@ describe('GET /chat/:chatId/user', () => {
 
         it('should return error when pageSize is bigger than 50', async () => {
             const res = await request(server)
-                .get(`/chat/${CHAT_ID}/user`)
+                .get(REQUEST_URL)
                 .query({ pageSize: 51 })
                 .set('Authorization', 'Bearer test-token');
 
@@ -71,7 +72,7 @@ describe('GET /chat/:chatId/user', () => {
     describe('success case', () => {
         it('should return list when page and pageSize are not provided', async () => {
             const res = await request(server)
-                .get(`/chat/${CHAT_ID}/user`)
+                .get(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
@@ -90,7 +91,7 @@ describe('GET /chat/:chatId/user', () => {
 
         it('should return list when page and pageSize are provided', async () => {
             const res = await request(server)
-                .get(`/chat/${CHAT_ID}/user`)
+                .get(REQUEST_URL)
                 .query({ page: 1, pageSize: 20 })
                 .set('Authorization', 'Bearer test-token');
 
@@ -110,7 +111,7 @@ describe('GET /chat/:chatId/user', () => {
 
         it('should return empty list when page is bigger than total page', async () => {
             const res = await request(server)
-                .get(`/chat/${CHAT_ID}/user`)
+                .get(REQUEST_URL)
                 .query({ page: 2, pageSize: 20 })
                 .set('Authorization', 'Bearer test-token');
 

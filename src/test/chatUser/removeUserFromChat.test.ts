@@ -13,6 +13,7 @@ import { Socket as ClientSocket, io as ioc } from 'socket.io-client';
 import request from 'supertest';
 
 describe('DELETE /chat/:chatId/user/:userId', () => {
+    const REQUEST_URL = `/chat/${CHAT_ID}/user/${USER2_ID}`;
     let server: Server, clientSocket: ClientSocket, clientSocket2: ClientSocket;
 
     beforeAll((done) => {
@@ -59,7 +60,7 @@ describe('DELETE /chat/:chatId/user/:userId', () => {
                 { $set: { status: STATUS.ARCHIVED } },
             );
             const res = await request(server)
-                .delete(`/chat/${CHAT_ID}/user/${USER2_ID}`)
+                .delete(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(403);
@@ -71,7 +72,7 @@ describe('DELETE /chat/:chatId/user/:userId', () => {
         it('should update the database and notify the user', async () => {
             const socketPromise = waitFor(clientSocket2, CHAT_USER_REMOVED);
             const res = await request(server)
-                .delete(`/chat/${CHAT_ID}/user/${USER2_ID}`)
+                .delete(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(204);

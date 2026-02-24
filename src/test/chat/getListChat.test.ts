@@ -5,6 +5,7 @@ import { Server } from 'http';
 import request from 'supertest';
 
 describe('GET /chat', () => {
+    const REQUEST_URL = '/chat';
     let server: Server;
 
     beforeAll((done) => {
@@ -20,7 +21,7 @@ describe('GET /chat', () => {
     describe('success case', () => {
         it('should return chat list for user without cursor', async () => {
             const res = await request(server)
-                .get('/chat')
+                .get(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
@@ -33,7 +34,7 @@ describe('GET /chat', () => {
 
         it('should pass cursor to service when provided', async () => {
             const res = await request(server)
-                .get('/chat')
+                .get(REQUEST_URL)
                 .set('Authorization', 'Bearer test-token');
 
             expect(res.status).toBe(200);
@@ -42,7 +43,7 @@ describe('GET /chat', () => {
             expect(res.body.data).toHaveLength(1);
 
             const res2 = await request(server)
-                .get('/chat')
+                .get(REQUEST_URL)
                 .query({ cursor: res.body.data[0].updatedAt })
                 .set('Authorization', 'Bearer test-token');
 

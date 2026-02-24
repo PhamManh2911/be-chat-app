@@ -69,6 +69,7 @@ export const controller = <
             const statusCode = result?.statusCode ?? 200;
 
             res.status(statusCode).json(data);
+            next();
         } catch (error) {
             next(error);
         }

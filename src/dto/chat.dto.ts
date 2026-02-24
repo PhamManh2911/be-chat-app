@@ -1,6 +1,6 @@
 import { ChatDetailParamsDto, CursorPaginationQueryDto } from '@/dto/base.dto';
 import { Status, STATUS } from '@/types/app';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { ArrayNotEmpty, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class GetListChatQueryDto extends CursorPaginationQueryDto<string> {}
 
@@ -13,6 +13,7 @@ export class CreateChatBodyDto {
     description?: string;
 
     @IsString({ each: true })
+    @ArrayNotEmpty()
     memberIds: string[];
 }
 

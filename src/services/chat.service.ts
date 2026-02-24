@@ -47,12 +47,12 @@ class Service {
     };
 
     deleteChat = async (chatId: string) => {
-        const chat = await ChatModel.deleteOne({ _id: chatId });
+        const result = await ChatModel.deleteOne({ _id: chatId });
 
-        if (chat.deletedCount === 0) {
+        if (result.deletedCount === 0) {
             throw new NotFoundError({ message: 'Chat not found' });
         }
-        return chat;
+        return result;
     };
 }
 

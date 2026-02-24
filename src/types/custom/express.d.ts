@@ -15,3 +15,9 @@ declare global {
         }
     }
 }
+
+declare module 'http' {
+    interface IncomingHttpHeaders {
+        'idempotency-key': string | undefined;
+    }
+}
