@@ -5,7 +5,6 @@ import express, { json, urlencoded } from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import http from 'http';
-import 'reflect-metadata';
 
 import '@/cache'; // Initialize Redis connection
 import '@/database'; // Initialize MongoDB connection

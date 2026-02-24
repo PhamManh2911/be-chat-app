@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { config } from '@/config';
 import logger from '@/logger';
 import { createServer } from '@/routers/app';
