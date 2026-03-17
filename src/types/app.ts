@@ -23,7 +23,7 @@ export type SocketData = {
 };
 
 export type CursorQueryList = {
-    limit: number;
+    limit?: number;
     cursor?: string;
 };
 

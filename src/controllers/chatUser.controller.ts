@@ -12,7 +12,6 @@ import { chatUserService } from '@/services/chatUser.service';
 import { userService } from '@/services/user.service';
 import SocketServerSingleton from '@/socket';
 
-// TODO: what is remove/add user permission
 class Controller {
     addUserToChat = controller(
         { params: AddUserToChatParamsDto, body: AddUserToChatBodyDto },
@@ -48,7 +47,6 @@ class Controller {
         },
     );
 
-    // TODO: what about leaving chat (send userId as yourself)
     removeUserFromChat = controller({ params: RemoveUserFromChatParamsDto }, async (req) => {
         const { chatId, userId } = req.params;
 

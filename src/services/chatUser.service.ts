@@ -9,9 +9,15 @@ class Service {
         if (queryList.cursor) {
             filter.updatedAt = { $lt: queryList.cursor };
         }
+        if (!queryList.limit) {
+            return {
+                data: await ChatUserModel.find(filter).sort({ updatedAt: -1 }).lean(),
+                hasMore: false,
+            };
+        }
         const documents = await ChatUserModel.find(filter)
-            .limit(queryList.limit)
             .sort({ updatedAt: -1 })
+            .limit(queryList.limit)
             .lean();
 
         const hasMore =

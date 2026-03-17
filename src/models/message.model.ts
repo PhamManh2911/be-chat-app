@@ -30,8 +30,6 @@ class Message extends TimeStamps {
 
     @prop({ default: false })
     isEdited: boolean;
-
-    // TODO: implement enum for message type
 }
 
 export type MessageFilter = QueryFilter<Message>;

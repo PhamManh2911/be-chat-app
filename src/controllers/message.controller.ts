@@ -45,7 +45,7 @@ class Controller {
                 userAvatarUrl: req.user.avatar,
             });
 
-            // send notification to chat members
+            // TODO: using CDC for sending socket event
             SocketServerSingleton.getIO()
                 .to(chatService.getSocketRoomForChat(chatId))
                 .emit(MESSAGE_CREATED, message);

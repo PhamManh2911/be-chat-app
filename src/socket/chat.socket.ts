@@ -32,10 +32,7 @@ export class ChatSocket {
                 this.socket.disconnect();
             }
         });
-        // TODO: only get 9999 chat user, maybe change later
-        const listChat = await chatUserService.getListChatForUser(this.socket.data.user.sub, {
-            limit: 9999,
-        });
+        const listChat = await chatUserService.getListChatForUser(this.socket.data.user.sub, {});
 
         await this.socket.join(
             listChat.data.map((c) => chatService.getSocketRoomForChat(c.chatId.toString())),

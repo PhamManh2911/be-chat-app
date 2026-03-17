@@ -3,19 +3,24 @@ import { CursorQueryList } from '@/types/app';
 
 class Service {
     getListMessages = async (chatId: string, queryList: CursorQueryList) => {
-        const { cursor, limit } = queryList;
         const filter: MessageFilter = { chatId };
 
-        if (cursor) {
-            filter.createdAt = { $lt: cursor };
+        if (queryList.cursor) {
+            filter.createdAt = { $lt: queryList.cursor };
+        }
+        if (!queryList.limit) {
+            return {
+                data: await MessageModel.find(filter).sort({ createdAt: -1 }).lean(),
+                hasMore: false,
+            };
         }
         const documents = await MessageModel.find(filter)
-            .limit(limit)
+            .limit(queryList.limit)
             .sort({ createdAt: -1 })
             .lean();
 
         const hasMore =
-            documents.length < limit
+            documents.length < queryList.limit
                 ? false
                 : await MessageModel.exists({
                       chatId,
